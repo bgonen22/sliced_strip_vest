@@ -1,0 +1,1 @@
+# sliced_strip_vest
