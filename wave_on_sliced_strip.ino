@@ -4,7 +4,7 @@
 
 // Which pin on the Arduino is connected to the NeoPixels?
 #define PIN            6
-#define PIN2           5
+#define PIN_1           5
 
 // How many NeoPixels are attached to the Arduino?
 #define NUMPIXELS       13
@@ -16,7 +16,7 @@
 #define UNCONNECTED_ANALOG_PIN 0// for random seed
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS+NUMPIXELS2+NUMPIXELS3, PIN, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel pixels2 = Adafruit_NeoPixel(NUMPIXELS+NUMPIXELS2+NUMPIXELS3, PIN2, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel pixels2 = Adafruit_NeoPixel(NUMPIXELS+NUMPIXELS2+NUMPIXELS3, PIN_1, NEO_GRB + NEO_KHZ800);
 
 
 int max_pix;
@@ -35,13 +35,40 @@ void setup() {
 /////////////////////////////////////////////////////////////////
 void loop() {
 /////////////////////////////////////////////////////////////////  
-   //startGradiant(int color_jump, int power_jump,int delayval, int num_of_cycles)
-   startGradiant(1,0,50,3);
-//  delay(10000); // Delay for a period of time (in milliseconds).
-//  startGradiant(0,1,5,10); // up and down 
- //startFire(int delay_time, int time_left)
-  startFire(50,10000);
+   startGradiant(1,0,20,10); // gradiant without powered led startGradiant(int color_jump, int power_jump,int delayval, int num_of_cycles)
+//  startGradiant(0,1,5,10); // up and down powered led
+//  startFire(50,10000); //startFire(delay_time, time_left)
+   startWings(60,10000,17); //startWings(int delay_time, int time_left, int num_of_colors)
 
+}
+
+/////////////////////////////////////////////////////////////////
+void startWings(int delay_time, int time_left, int num_of_colors) {
+/////////////////////////////////////////////////////////////////  
+   int j=0;
+   clearAll();   
+   while (time_left > 0) {     
+    setWingLine(getColor(j,POWER,num_of_colors),NUMPIXELS,0);
+    setWingLine(getColor(j+1,POWER,num_of_colors),NUMPIXELS2,NUMPIXELS);
+    setWingLine(getColor(j+2,POWER,num_of_colors),NUMPIXELS3,NUMPIXELS+NUMPIXELS2);
+    delay(delay_time);
+    time_left -= delay_time;
+    showPixels();
+    j++;
+  }
+    
+}
+
+/////////////////////////////////////////////////////////////////
+void setWingLine(uint32_t color, int num_of_pixels, int start_pixel) {
+/////////////////////////////////////////////////////////////////  
+    //Serial.println(start_pixel);
+    //Serial.println(num_of_pixels);
+    for (int i = start_pixel ; i<start_pixel+num_of_pixels; i++) {
+      //Serial.println(i);
+      addPixel(i,color ,1); //FIRST STRIP
+      addPixel(NUMPIXELS+NUMPIXELS2+NUMPIXELS3-i,color ,2); //SECOND STRIP
+    }
 }
 
 /////////////////////////////////////////////////////////////////
@@ -200,8 +227,9 @@ void gradiant(int color_i,int power_i,int strip,int line) {
     int power_tmp;
     if (i==power_i+1 || i==power_i-1) {
       power_tmp=power+40;
+   //   Serial.println(i);
     } else if (i==power_i) {
-      power_tmp=power+80;
+      power_tmp=power+80;      
     } else {
       power_tmp=power;
     }
@@ -231,21 +259,22 @@ void gradiant(int color_i,int power_i,int strip,int line) {
 /////////////////////////////////////////////////////////////////
 uint32_t getColor(int i, int power, int max_pix) {
 /////////////////////////////////////////////////////////////////
-  double b_factore= 1;
   i = i%max_pix;
-  if (i<=max_pix/3) {
+  if (i<max_pix/3) {
        int p = i*3*power/max_pix;
-
 //         Serial.print(p);         
-//         Serial.println(power);         
-                        //(R,G,B)
+//         Serial.println(power);                               
        return pixels.Color(power-p,p,0);
-  } else if (i <=2*max_pix/3) {
-       int p = i*3*power/(2*max_pix);
-       return pixels.Color(0,power-p,b_factore*p);
+  } else if (i <2*max_pix/3) {
+      // int p = i*3*power/(2*max_pix);
+       int p = (i-max_pix/3)*3*power/max_pix;
+       //Serial.println(power);
+       //Serial.println(p);
+       return pixels.Color(0,power-p,p);
   } else {
-       int p = i*power/max_pix;
-       return pixels.Color(p,0,b_factore*(power-p)); 
+       //int p = i*power/max_pix;
+       int p = (i-2*max_pix/3)*3*power/max_pix;
+       return pixels.Color(p,0,power-p); 
   }
 }
 
